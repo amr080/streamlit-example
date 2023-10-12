@@ -1,38 +1,31 @@
-from collections import namedtuple
-import altair as alt
-import math
-import pandas as pd
 import streamlit as st
+import numpy as np
+import statsmodels.api as sm
 
-"""
-# Welcome to Streamlit!
+def perform_simple_linear_regression(y, x):
+    if len(y) != len(x):
+        st.error("# of elements in dependent + independent variables must be the same.")
+        return
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:
+    x = sm.add_constant(x)  # Adds a constant term to the predictor
+    model = sm.OLS(y, x)
+    results = model.fit()
 
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
+    st.subheader("Regression Results:")
+    st.text(results.summary())
 
-In the meantime, below is an example of what you can do with just a few lines of code:
-"""
+def main():
+    st.title("Simple Linear Regression App")
 
+    # Streamlit widgets for user input
+    y_input = st.text_input("Dependent variable separated by commas:")
+    x_input = st.text_input("Independent variable separated by commas:")
+    submit_button = st.button("Run Linear Regression")
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+    if submit_button:
+        y = np.array(list(map(float, y_input.split(","))))
+        x = np.array(list(map(float, x_input.split(","))))
+        perform_simple_linear_regression(y, x)
 
-    Point = namedtuple('Point', 'x y')
-    data = []
-
-    points_per_turn = total_points / num_turns
-
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
+if __name__ == "__main__":
+    main()
